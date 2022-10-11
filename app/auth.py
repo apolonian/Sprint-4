@@ -26,12 +26,12 @@ def activate():
             
             db = get_db()
             attempt = db.execute(
-                'SELECT id From user WHERE username = ?', (number, utils.U_UNCONFIRMED)
+                'SELECT * FROM activationlink where challenge =? and state =? and CURRENT_TIMESTAMP between created and validuntil', (number, utils.U_UNCONFIRMED)
             ).fetchone()
 
             if attempt is not None:
                 db.execute(
-                    'SELECT id From user WHERE username = ?', (utils.U_CONFIRMED, attempt['id']) #corregido
+                    'UPDATE activationlink set state =? where id =?', (utils.U_CONFIRMED, attempt['id']) #corregido
                 )
                 db.execute(
                     'SELECT id From user WHERE username = ?', (attempt['username'], attempt['password'], attempt['salt'], attempt['email']) #corregido
@@ -149,11 +149,11 @@ def confirm():
             if not utils.isPasswordValid(password):
                 error = 'La contraseña debe contener una letra minúscula, una letra mayúscula y un numerio de al menos 8 carácteres.'
                 flash(error)
-                return render_template('auth/change.html', number=authid)
+                return render_template('auth/change.html', number=authid) 
 
             db = get_db()
             attempt = db.execute(
-                'SELECT * from forgotlink WHERE challenge = ? AND state = ? AND CURRENT_TIMESTAMP BETWEEN create and validate password', (authid, utils.F_ACTIVE) #corregido_preguntar
+                'SELECT * from forgotlink WHERE challenge = ? AND state = ? AND CURRENT_TIMESTAMP BETWEEN created and validuntil', (authid, utils.F_ACTIVE) #corregido_preguntar
             ).fetchone()
             
             if attempt is not None:
